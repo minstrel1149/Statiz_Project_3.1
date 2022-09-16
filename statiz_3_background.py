@@ -13,16 +13,19 @@ from openpyxl.styles.alignment import Alignment
 from openpyxl.styles import PatternFill, colors
 from pathlib import Path
 
-class statiz:
-    def __init__(self, year):
-        statiz.record_site = {'타격기본':f'http://www.statiz.co.kr/stat.php?opt=0&sopt=0&re=0&ys={year}&ye={year}&se=0&te=&tm=&ty=0&qu=auto&po=0&as=&ae=&hi=&un=&pl=&da=1&o1=WAR_ALL_ADJ&o2=TPA&de=1&lr=0&tr=&cv=&ml=1&sn=30&si=&cn=',
+year = sys.argv[1]
+
+record_site = {'타격기본':f'http://www.statiz.co.kr/stat.php?opt=0&sopt=0&re=0&ys={year}&ye={year}&se=0&te=&tm=&ty=0&qu=auto&po=0&as=&ae=&hi=&un=&pl=&da=1&o1=WAR_ALL_ADJ&o2=TPA&de=1&lr=0&tr=&cv=&ml=1&sn=30&si=&cn=',
         '타격확장':f'http://www.statiz.co.kr/stat.php?opt=0&sopt=0&re=0&ys={year}&ye={year}&se=0&te=&tm=&ty=0&qu=all&po=0&as=&ae=&hi=&un=&pl=&da=2&o1=WRCPLUS&o2=WAR_ALL&de=1&lr=0&tr=&cv=&ml=1&sn=30&si=&cn=',
         '투수기본':f'http://www.statiz.co.kr/stat.php?opt=0&sopt=0&re=1&ys={year}&ye={year}&se=0&te=&tm=&ty=0&qu=auto&po=0&as=&ae=&hi=&un=&pl=&da=1&o1=WAR&o2=OutCount&de=1&lr=0&tr=&cv=&ml=1&sn=30&si=&cn=',
         '투수확장':f'http://www.statiz.co.kr/stat.php?opt=0&sopt=0&re=1&ys={year}&ye={year}&se=0&te=&tm=&ty=0&qu=all&po=0&as=&ae=&hi=&un=&pl=&da=2&o1=FIP&o2=WAR&de=0&lr=0&tr=&cv=&ml=1&sn=30&si=&cn=',
         '투수구속':f'http://www.statiz.co.kr/stat.php?opt=0&sopt=0&re=1&ys={year}&ye={year}&se=0&te=&tm=&ty=0&qu=all&po=0&as=&ae=&hi=&un=&pl=&da=14&o1=FVval&de=1&o2=WAR&lr=0&tr=&cv=&ml=1&sn=30&si=&cn='
         }
-        statiz.kt_site = {'타격':f'http://www.statiz.co.kr/stat.php?mid=stat&re=0&ys={year}&ye={year}&se=0&te=kt&tm=&ty=0&qu=auto&po=0&as=&ae=&hi=&un=&pl=&da=1&o1=WAR_ALL_ADJ&o2=TPA&de=1&lr=0&tr=&cv=&ml=1&sn=30&pa=0&si=&cn=',
+kt_site = {'타격':f'http://www.statiz.co.kr/stat.php?mid=stat&re=0&ys={year}&ye={year}&se=0&te=kt&tm=&ty=0&qu=auto&po=0&as=&ae=&hi=&un=&pl=&da=1&o1=WAR_ALL_ADJ&o2=TPA&de=1&lr=0&tr=&cv=&ml=1&sn=30&pa=0&si=&cn=',
         '투수':f'http://www.statiz.co.kr/stat.php?opt=0&sopt=0&re=1&ys={year}&ye={year}&se=0&te=kt&tm=&ty=0&qu=auto&po=0&as=&ae=&hi=&un=&pl=&da=1&o1=WAR&o2=OutCount&de=1&lr=0&tr=&cv=&ml=1&sn=30&si=&cn='}
+
+class Statiz:
+    def __init__(self):
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     
     def table_change(self, df):
@@ -43,7 +46,7 @@ class statiz:
     # 일단 다 만들어놓고 리팩토링을 생각해보자
     @property
     def hit_basic(self):
-        self.driver.get(statiz.record_site['타격기본'])
+        self.driver.get(record_site['타격기본'])
         hit_basic_df_list = []
         while True:
             page = self.driver.page_source
@@ -64,7 +67,7 @@ class statiz:
     
     @property
     def hit_expand(self):
-        self.driver.get(statiz.record_site['타격확장'])
+        self.driver.get(record_site['타격확장'])
         hit_expand_df_list = []
         while True:
             page = self.driver.page_source
@@ -85,7 +88,7 @@ class statiz:
     
     @property
     def pitch_basic(self):
-        self.driver.get(statiz.record_site['타격기본'])
+        self.driver.get(record_site['타격기본'])
         pitch_basic_df_list = []
         while True:
             page = self.driver.page_source
@@ -106,7 +109,7 @@ class statiz:
     
     @property
     def pitch_expand(self):
-        self.driver.get(statiz.record_site['타격기본'])
+        self.driver.get(record_site['타격기본'])
         pitch_expand_df_list = []
         while True:
             page = self.driver.page_source
@@ -127,7 +130,7 @@ class statiz:
     
     @property
     def pitch_speed(self):
-        self.driver.get(statiz.record_site['타격기본'])
+        self.driver.get(record_site['타격기본'])
         pitch_speed_df_list = []
         while True:
             page = self.driver.page_source
@@ -148,7 +151,7 @@ class statiz:
     
     @property
     def kt_team_member_hit(self):
-        self.driver.get(statiz.kt_site['타격'])
+        self.driver.get(kt_site['타격'])
         kt_df_list_hit = []
         while True:
             page = self.driver.page_source
@@ -173,7 +176,7 @@ class statiz:
     
     @property
     def kt_team_member_pitch(self):
-        self.driver.get(statiz.kt_site['투수'])
+        self.driver.get(kt_site['투수'])
         kt_df_list_pitch = []
         while True:
             page = self.driver.page_source
@@ -297,6 +300,7 @@ class statiz:
         .assign(소속=lambda df: np.where(df['이름'].isin(self.kt_team_member_hit), 'KT', df['소속']))
         .loc[:, hit_columns]
         )
+        return self.hit_df
     
     def merge_pitch(self):
         self.pitch_df = (self.pitch_basic
@@ -321,7 +325,24 @@ class statiz:
         .assign(소속=lambda df: np.where(df['이름'].isin(self.kt_team_member_pitch), 'KT', df['소속']))
         .loc[:, pitch_columns]
         )
+        return self.pitch_df
     
-
+    def export_excel(self, year):
+        file_path = Path.home() / 'statiz_project_3.1' / f'Statiz_{year}.xlsx'
+        excel_file = pd.ExcelWriter(file_path, engine='openpyxl')
+        self.merge_hit().to_excel(excel_file, sheet_name='타자', index=False)
+        self.merge_pitch().to_excel(excel_file, sheet_name='투수', index=False)
+        excel_file.save()
+        excel_file = openpyxl.load_workbook(file_path)
+        for sheet_name in ['타자', '투수']:
+            sheet = excel_file[sheet_name]
+            bold_font = Font(bold=True)
+            center_alignment = Alignment(horizontal='center', vertical='center')
+            yellow_fill = PatternFill(start_color='00FFFF00', end_color='00FFFF00', fill_type='solid')
+            for i in range(1, sheet.max_column + 1):
+                sheet.cell(1, i).font = bold_font
+                sheet.cell(1, i).alignment = center_alignment
+                sheet.cell(1, i).fill = yellow_fill
+        excel_file.save(file_path)
 
 
