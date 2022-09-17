@@ -1,5 +1,6 @@
 import sys
 import pandas as pd
+import lxml
 import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -63,6 +64,19 @@ class Statiz:
                 print('수집 종료')
                 break
         hit_basic_df = pd.concat(hit_basic_df_list)
+        hit_basic_cols = ['순', '이름', '팀', 'G', '타석', '타수', '득점', '안타', '2타', '3타', '홈런',
+        '루타', '타점', '도루', '도실', '볼넷', '사구', '고4', '삼진', '병살', '희타', '희비',
+        '타율', '출루', '장타', 'OPS', 'wOBA', 'wRC+', 'WAR*', 'WPA']
+        hit_basic_df = (hit_basic_df
+        .pipe(lambda df: df.droplevel(0, axis=1))
+        .pipe(lambda df: df.query("이름 != '이름'"))
+        .loc[:, hit_basic_cols]
+        )
+        hit_basic_sep = hit_basic_df.loc[:, 'WAR*'].iloc[:, 0]
+        hit_basic_df = (hit_basic_df
+        .drop(['WAR*', '순'], axis=1)
+        .assign(**{'WAR*':hit_basic_sep})
+        )
         return hit_basic_df
     
     @property
@@ -84,11 +98,23 @@ class Statiz:
                 print('수집 종료')
                 break
         hit_expand_df = pd.concat(hit_expand_df_list)
+        hit_expand_cols = ['순', '이름', '팀', '타석', 'HR%', 'BB%', 'K%', 'BB/K', 'IsoP', 'IsoD',
+        'BABIP', 'Spd', 'PSN', 'wRC+']
+        hit_expand_df = (hit_expand_df
+        .pipe(lambda df: df.droplevel(0, axis=1))
+        .pipe(lambda df: df.query("이름 != '이름'"))
+        .loc[:, hit_expand_cols]
+        )
+        hit_expand_sep = hit_expand_df.loc[:, 'wRC+'].iloc[:, 0]
+        hit_expand_df = (hit_expand_df
+        .drop(['wRC+', '순'], axis=1)
+        .assign(**{'wRC+':hit_expand_sep})
+        )
         return hit_expand_df
     
     @property
     def pitch_basic(self):
-        self.driver.get(record_site['타격기본'])
+        self.driver.get(record_site['투수기본'])
         pitch_basic_df_list = []
         while True:
             page = self.driver.page_source
@@ -105,11 +131,24 @@ class Statiz:
                 print('수집 종료')
                 break
         pitch_basic_df = pd.concat(pitch_basic_df_list)
+        pitch_basic_cols = ['순', '이름', '팀', '출장', '완투', '완봉', '선발', '승', '패', '세', '홀드', '이닝', '실점',
+        '자책', '타자', '안타', '2타', '3타', '홈런', '볼넷', '고4', '사구', '삼진', '보크', '폭투',
+        'ERA', 'FIP', 'WHIP', 'ERA+', 'FIP+', 'WAR', 'WPA']
+        pitch_basic_df = (pitch_basic_df
+        .pipe(lambda df: df.droplevel(0, axis=1))
+        .pipe(lambda df: df.query("이름 != '이름'"))
+        .loc[:, pitch_basic_cols]
+        )
+        pitch_basic_sep = pitch_basic_df.loc[:, 'WAR'].iloc[:, 0]
+        pitch_basic_df = (pitch_basic_df
+        .drop(['WAR', '순'], axis=1)
+        .assign(**{'WAR':pitch_basic_sep})
+        )
         return pitch_basic_df
     
     @property
     def pitch_expand(self):
-        self.driver.get(record_site['타격기본'])
+        self.driver.get(record_site['투수확장'])
         pitch_expand_df_list = []
         while True:
             page = self.driver.page_source
@@ -126,11 +165,25 @@ class Statiz:
                 print('수집 종료')
                 break
         pitch_expand_df = pd.concat(pitch_expand_df_list)
+        pitch_expand_cols = ['순', '이름', '팀', '출장', '이닝', 'ERA', 'FIP', 'K/9', 'BB/9', 'K/BB',
+        'HR/9', 'K%', 'BB%', 'K-BB%', 'PFR', 'BABIP', 'LOB%', '타율', '출루율',
+        '장타율', 'OPS', 'WHIP', 'WHIP+', '투구', 'IP/G', 'P/G', 'P/IP', 'P/PA',
+        'CYP']
+        pitch_expand_df = (pitch_expand_df
+        .pipe(lambda df: df.droplevel(0, axis=1))
+        .pipe(lambda df: df.query("이름 != '이름'"))
+        .loc[:, pitch_expand_cols]
+        )
+        pitch_expand_sep = pitch_expand_df.loc[:, 'FIP'].iloc[:, 0]
+        pitch_expand_df = (pitch_expand_df
+        .drop(['FIP', '순'], axis=1)
+        .assign(**{'FIP':pitch_expand_sep})
+        )
         return pitch_expand_df
     
     @property
     def pitch_speed(self):
-        self.driver.get(record_site['타격기본'])
+        self.driver.get(record_site['투수구속'])
         pitch_speed_df_list = []
         while True:
             page = self.driver.page_source
@@ -147,6 +200,26 @@ class Statiz:
                 print('수집 종료')
                 break
         pitch_speed_df = pd.concat(pitch_speed_df_list)
+        def numeric(df):
+            for col in df.columns.tolist():
+                df[col] = pd.to_numeric(df[col], errors='ignore')
+            return df
+        pitch_speed_cols = ['순', '이름', '팀', '출장', '이닝', '직구', '슬라', '커브', '첸졉', '스플', '싱커',
+        '너클', '기타']
+        pitch_speed_df = (pitch_speed_df
+        .pipe(lambda df: df.droplevel(0, axis=1))
+        .pipe(lambda df: df.query("이름 != '이름'"))
+        .loc[:, pitch_speed_cols]
+        )
+        pitch_speed_df.columns = ['순', '이름', '팀', '출장', '이닝', '직구구속', '직구구속2', '직구구사', '슬라구속', '슬라구사', '커브구속', '커브구사',
+        '첸졉구속', '첸졉구사', '스플구속', '스플구사', '싱커구속', '싱커구사', '너클구속', '너클구사', '기타구속', '기타구사']
+        pitch_speed_df = (pitch_speed_df
+        .drop('직구구속2', axis=1)
+        .pipe(numeric)
+        .assign(최고구속=lambda df: df.loc[:, ['직구구속', '슬라구속', '커브구속', '첸졉구속', '스플구속', '싱커구속', '너클구속', '기타구속']].max(axis=1))
+        .loc[:, ['순', '이름', '팀', '출장', '이닝', '최고구속', '직구구속', '슬라구속', '커브구속', '첸졉구속', '스플구속', '싱커구속', '너클구속', '기타구속', 
+        '직구구사', '슬라구사', '커브구사', '첸졉구사', '스플구사', '싱커구사', '너클구사', '기타구사']]
+        )
         return pitch_speed_df
     
     @property
@@ -168,7 +241,7 @@ class Statiz:
                 print('수집 종료')
                 break
         kt_team_member_hit = (pd.concat(kt_df_list_hit)
-        .pipe(self.table_change)
+        .pipe(lambda df: df.droplevel(0, axis=1))
         ['이름']
         .tolist()
         )
@@ -193,99 +266,20 @@ class Statiz:
                 print('수집 종료')
                 break
         kt_team_member_pitch = (pd.concat(kt_df_list_pitch)
-        .pipe(self.table_change)
+        .pipe(lambda df: df.droplevel(0, axis=1))
         ['이름']
         .tolist()
         )
         return kt_team_member_pitch
     
-    def preprocess_hit_basic(self):
-        hit_basic_cols = ['순', '이름', '팀', 'G', '타석', '타수', '득점', '안타', '2타', '3타', '홈런',
-       '루타', '타점', '도루', '도실', '볼넷', '사구', '고4', '삼진', '병살', '희타', '희비',
-       '타율', '출루', '장타', 'OPS', 'wOBA', 'wRC+', 'WAR*', 'WPA']
-        self.hit_basic = (self.hit_basic
-        .pipe(self.table_change)
-        .pipe(self.remove_records)
-        .loc[:, hit_basic_cols]
-        )
-        hit_basic_sep = self.hit_basic.loc[:, 'WAR*'].iloc[:, 0]
-        self.hit_basic = (self.hit_basic
-        .drop(['WAR*', '순'], axis=1)
-        .assign(**{'WAR*':hit_basic_sep})
-        )
-        return self.hit_basic
-    
-    def preprocess_hit_expand(self):
-        hit_expand_cols = ['순', '이름', '팀', '타석', 'HR%', 'BB%', 'K%', 'BB/K', 'IsoP', 'IsoD',
-       'BABIP', 'Spd', 'PSN', 'wRC+']
-        self.hit_expand = (self.hit_expand
-        .pipe(self.table_change)
-        .pipe(self.remove_records)
-        .loc[:, hit_expand_cols]
-        )
-        hit_expand_sep = self.hit_expand.loc[:, 'wRC+'].iloc[:, 0]
-        self.hit_expand = (self.hit_expand
-        .drop(['wRC+', '순'], axis=1)
-        .assign(**{'wRC+':hit_expand_sep})
-        )
-        return self.hit_expand
-    
-    def preprocess_pitch_basic(self):
-        pitch_basic_cols = ['순', '이름', '팀', '출장', '완투', '완봉', '선발', '승', '패', '세', '홀드', '이닝', '실점',
-       '자책', '타자', '안타', '2타', '3타', '홈런', '볼넷', '고4', '사구', '삼진', '보크', '폭투',
-       'ERA', 'FIP', 'WHIP', 'ERA+', 'FIP+', 'WAR', 'WPA']
-        self.pitch_basic = (self.pitch_basic
-        .pipe(self.table_change)
-        .pipe(self.remove_records)
-        .loc[:, pitch_basic_cols]
-        )
-        pitch_basic_sep = self.pitch_basic.loc[:, 'WAR'].iloc[:, 0]
-        self.pitch_basic = (self.pitch_basic
-        .drop(['WAR', '순'], axis=1)
-        .assign(**{'WAR':pitch_basic_sep})
-        )
-        return self.pitch_basic
-    
-    def preprocess_pitch_expand(self):
-        pitch_expand_cols = ['순', '이름', '팀', '출장', '이닝', 'ERA', 'FIP', 'K/9', 'BB/9', 'K/BB',
-       'HR/9', 'K%', 'BB%', 'K-BB%', 'PFR', 'BABIP', 'LOB%', '타율', '출루율',
-       '장타율', 'OPS', 'WHIP', 'WHIP+', '투구', 'IP/G', 'P/G', 'P/IP', 'P/PA',
-       'CYP']
-        self.pitch_expand = (self.pitch_expand
-        .pipe(self.table_change)
-        .pipe(self.remove_records)
-        .loc[:, pitch_expand_cols]
-        )
-        pitch_expand_sep = self.pitch_expand.loc[:, 'FIP'].iloc[:, 0]
-        self.pitch_expand = (self.pitch_expand
-        .drop(['FIP', '순'], axis=1)
-        .assign(**{'FIP':pitch_expand_sep})
-        )
-        return self.pitch_expand
-    
-    def preprocess_pitch_speed(self):
-        pitch_speed_cols = ['순', '이름', '팀', '출장', '이닝', '직구', '슬라', '커브', '첸졉', '스플', '싱커',
-       '너클', '기타']
-        self.pitch_speed = (self.pitch_speed
-        .pipe(self.table_change)
-        .pipe(self.remove_records)
-        .loc[:, pitch_speed_cols]
-        )
-        self.pitch_speed.columns = ['순', '이름', '팀', '출장', '이닝', '직구구속', '직구구속2', '직구구사', '슬라구속', '슬라구사', '커브구속', '커브구사',
-       '첸졉구속', '첸졉구사', '스플구속', '스플구사', '싱커구속', '싱커구사', '너클구속', '너클구사', '기타구속', '기타구사']
-        self.pitch_speed = (self.pitch_speed
-        .drop('직구구속', axis=1)
-        .pipe(self.numeric)
-        .assign(최고구속=lambda df: df.loc[:, ['직구구속', '슬라구속', '커브구속', '첸졉구속', '스플구속', '싱커구속', '너클구속', '기타구속']].max(axis=1))
-        .loc[:, ['순', '이름', '팀', '출장', '이닝', '최고구속', '직구구속', '슬라구속', '커브구속', '첸졉구속', '스플구속', '싱커구속', '너클구속', '기타구속', 
-        '직구구사', '슬라구사', '커브구사', '첸졉구사', '스플구사', '싱커구사', '너클구사', '기타구사']]
-        )
-        return self.pitch_speed
-    
     def merge_hit(self):
+        def numeric(df):
+            for col in df.columns.tolist():
+                df[col] = pd.to_numeric(df[col], errors='ignore')
+            return df
         self.hit_df = (self.hit_basic
         .merge(self.hit_expand, on=['이름', '팀', '타석', 'wRC+'], how='inner')
-        .pipe(self.numeric)
+        .pipe(numeric)
         .fillna(0)
         )
         hit_columns = ['이름', '연도', '소속', '포지션', 'G', '타석', '타수', '득점', '안타', '2타', '3타', '홈런', '루타', '타점',
@@ -303,9 +297,13 @@ class Statiz:
         return self.hit_df
     
     def merge_pitch(self):
+        def numeric(df):
+            for col in df.columns.tolist():
+                df[col] = pd.to_numeric(df[col], errors='ignore')
+            return df
         self.pitch_df = (self.pitch_basic
         .merge(self.pitch_expand, on=['이름', '팀', '출장', '이닝', 'ERA', 'FIP', 'WHIP'], how='inner')
-        .pipe(self.numeric)
+        .pipe(numeric)
         .merge(self.pitch_speed, on=['이름', '팀', '출장', '이닝'], how='inner')
         .fillna(0)
         )
